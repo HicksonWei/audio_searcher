@@ -27,7 +27,10 @@ app.get('/:word', async (req, res) => {
 
 		const audio = dom.window.document.querySelectorAll('[id^=ampaudio]');
 		if ([...audio].length <= 0) {
-			res.send('error');
+			res.json({
+				status: 'fail',
+				message: 'No result!'
+			});
 			return;
 		}
 
@@ -39,7 +42,11 @@ app.get('/:word', async (req, res) => {
 			arr.push(target);
 		});
 
-		res.send(arr);
+		res.json({
+			status: 'success',
+			message: '',
+			audioArray: arr
+		});
 		/*
       [
         "/us/media/english-chinese-traditional/uk_pron/u/uka/ukalb/ukalbin030.mp3",
