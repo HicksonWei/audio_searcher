@@ -21,7 +21,6 @@ app.get('/:word', async (req, res) => {
 	try {
 		const word = req.params.word;
 		const site = req.query.q;
-		console.log(site);
 		if (site === 'oxford') {
 			const data = await fetchBody(`https://www.lexico.com/definition/${word}`);
 
@@ -66,7 +65,6 @@ app.get('/:word', async (req, res) => {
 				)[0].src;
 				arr.push(target);
 			});
-			console.log(arr);
 			res.json({
 				status: 'success',
 				message: '',
