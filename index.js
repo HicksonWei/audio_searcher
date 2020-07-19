@@ -20,7 +20,12 @@ const getAudioArray = async (url, target) => {
 	const dom = new JSDOM(data)
 	const nodeList = dom.window.document.querySelectorAll(target)
 	console.log('nodeList', nodeList)
-	return [...nodeList]
+	// return [...nodeList]
+	return Promise.resolve([...nodeList])
+}
+
+const wordTest = word => {
+	return /^[A-Za-z\-]+$/.test(word)
 }
 
 app.get('/', (req, res) => {
@@ -32,8 +37,9 @@ app.get('/:word', async (req, res) => {
 		const word = req.params.word
 		const site = req.query.q
 		let audioArr = []
+		if (!wordTest(word)) return
 		if (site === 'oxford') {
-			audioArr = getAudioArray(
+			audioArr = await getAudioArray(
 				`https://www.lexico.com/definition/${word}`,
 				'.headwordAudio'
 			)
@@ -54,13 +60,13 @@ app.get('/:word', async (req, res) => {
 				from: 'Oxford'
 			})
 		} else {
-			audioArr = getAudioArray(
+			audioArr = await getAudioArray(
 				`https://dictionary.cambridge.org/us/dictionary/english-chinese-traditional/${word}`,
 				'[id^=ampaudio]'
 			)
 			console.log('audioArr1', audioArr)
 			if (audioArr.length <= 0) {
-				audioArr = getAudioArray(
+				audioArr = await getAudioArray(
 					`https://dictionary.cambridge.org/us/dictionary/english/${word}`,
 					'[id^=ampaudio]'
 				)
