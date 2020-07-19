@@ -1,76 +1,86 @@
-const express = require('express');
-const cors = require('cors');
-const fetch = require('node-fetch');
-const { JSDOM } = require('jsdom');
-const app = express();
+const express = require('express')
+const cors = require('cors')
+const fetch = require('node-fetch')
+const { JSDOM } = require('jsdom')
+const app = express()
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 5000
 
-app.use(express.urlencoded({ extended: false }));
-app.use(cors());
+app.use(express.urlencoded({ extended: false }))
+app.use(cors())
 
-function fetchBody(url) {
-	return fetch(url).then(res => res.text());
+const fetchBody = url => {
+	return fetch(url).then(res => res.text())
+}
+
+const getAudioArray = async (url, target) => {
+	const data = await fetchBody(url)
+	const dom = new JSDOM(data)
+	const nodeList = dom.window.document.querySelectorAll(target)
+	return [...nodeList]
 }
 
 app.get('/', (req, res) => {
-	res.send('Welcome to a basic express App');
-});
+	res.send('Welcome to a basic express App')
+})
 
 app.get('/:word', async (req, res) => {
 	try {
-		const word = req.params.word;
-		const site = req.query.q;
+		const word = req.params.word
+		const site = req.query.q
+		let audioArr = []
 		if (site === 'oxford') {
-			const data = await fetchBody(`https://www.lexico.com/definition/${word}`);
-
-			const dom = new JSDOM(data);
-
-			const audio = dom.window.document.querySelectorAll('.headwordAudio');
-			if ([...audio].length <= 0) {
-				res.json({
+			audioArr = getAudioArray(
+				`https://www.lexico.com/definition/${word}`,
+				'.headwordAudio'
+			)
+			if (audioArr.length <= 0) {
+				return res.json({
 					status: 'fail',
 					message: 'No result!'
-				});
-				return;
+				})
 			}
 
-			const arr = [...audio].map(item => item.firstChild.src);
-			console.log(arr);
+			const arr = audioArr.map(item => item.firstChild.src)
+			console.log(arr)
 			res.json({
 				status: 'success',
 				message: '',
 				audioArray: arr,
 				from: 'Oxford'
-			});
+			})
 		} else {
-			const data = await fetchBody(
-				`https://dictionary.cambridge.org/us/dictionary/english-chinese-traditional/${word}`
-			);
-			const dom = new JSDOM(data);
-
-			const audio = dom.window.document.querySelectorAll('[id^=ampaudio]');
-			if ([...audio].length <= 0) {
-				res.json({
-					status: 'fail',
-					message: 'No result!'
-				});
-				return;
+			audioArr = getAudioArray(
+				`https://dictionary.cambridge.org/us/dictionary/english-chinese-traditional/${word}`,
+				'[id^=ampaudio]'
+			)
+			if (audioArr.length <= 0) {
+				audioArr = getAudioArray(
+					`https://dictionary.cambridge.org/us/dictionary/english/${word}`,
+					'[id^=ampaudio]'
+				)
+				if (audioArr.length <= 0) {
+					return res.json({
+						status: 'fail',
+						message: 'No result!'
+					})
+				}
 			}
 
-			let arr = [];
+			let arr = []
 			audio.forEach(item => {
 				let target = [...item.getElementsByTagName('source')].filter(
 					source => source.type === 'audio/mpeg'
-				)[0].src;
-				arr.push(target);
-			});
+				)[0].src
+				arr.push(target)
+			})
+			console.log(arr)
 			res.json({
 				status: 'success',
 				message: '',
 				audioArray: arr,
 				from: 'Cambridge'
-			});
+			})
 		}
 		/*
       [
@@ -80,8 +90,8 @@ app.get('/:word', async (req, res) => {
     */
 		// baseUrl => https://dictionary.cambridge.org
 	} catch (error) {
-		res.status(500).send(error);
+		res.status(500).send(error)
 	}
-});
+})
 
-app.listen(port, () => console.log(`Listening on ${port}`));
+app.listen(port, () => console.log(`Listening on ${port}`))
