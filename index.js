@@ -14,9 +14,12 @@ const fetchBody = url => {
 }
 
 const getAudioArray = async (url, target) => {
+	console.log('url', url)
+	console.log('target', target)
 	const data = await fetchBody(url)
 	const dom = new JSDOM(data)
 	const nodeList = dom.window.document.querySelectorAll(target)
+	console.log('nodeList', nodeList)
 	return [...nodeList]
 }
 
@@ -34,6 +37,7 @@ app.get('/:word', async (req, res) => {
 				`https://www.lexico.com/definition/${word}`,
 				'.headwordAudio'
 			)
+			console.log('audioArr', audioArr)
 			if (audioArr.length <= 0) {
 				return res.json({
 					status: 'fail',
@@ -42,7 +46,7 @@ app.get('/:word', async (req, res) => {
 			}
 
 			const arr = audioArr.map(item => item.firstChild.src)
-			console.log(arr)
+			console.log('arr', arr)
 			res.json({
 				status: 'success',
 				message: '',
@@ -54,11 +58,13 @@ app.get('/:word', async (req, res) => {
 				`https://dictionary.cambridge.org/us/dictionary/english-chinese-traditional/${word}`,
 				'[id^=ampaudio]'
 			)
+			console.log('audioArr1', audioArr)
 			if (audioArr.length <= 0) {
 				audioArr = getAudioArray(
 					`https://dictionary.cambridge.org/us/dictionary/english/${word}`,
 					'[id^=ampaudio]'
 				)
+				console.log('audioArr2', audioArr)
 				if (audioArr.length <= 0) {
 					return res.json({
 						status: 'fail',
@@ -68,13 +74,13 @@ app.get('/:word', async (req, res) => {
 			}
 
 			let arr = []
-			audio.forEach(item => {
+			audioArr.forEach(item => {
 				let target = [...item.getElementsByTagName('source')].filter(
 					source => source.type === 'audio/mpeg'
 				)[0].src
 				arr.push(target)
 			})
-			console.log(arr)
+			console.log('arr', arr)
 			res.json({
 				status: 'success',
 				message: '',
